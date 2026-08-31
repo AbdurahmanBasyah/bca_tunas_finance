@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ application.application_number }} | Pengajuan Kredit{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div class="d-flex align-items-start gap-3">
+        <a href="{% url 'credit_digitalization:dashboard' %}" class="btn btn-sm btn-outline-secondary">Kembali</a>
+        <div>
+            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                <h1 class="h4 mb-0">{{ application.application_number }}</h1>
+                <span class="badge rounded-pill {{ application.status_badge_class }}">{{ application.get_status_display }}</span>
+            </div>
+            <p class="text-secondary mb-0">Dibuat {{ application.created_at|date:'d M Y, H:i' }} oleh {{ application.created_by.get_full_name|default:application.created_by.username }}</p>
+        </div>
+    </div>
+    {% if is_marketing and application.created_by == request.user and application.status == 'DRAFT' %}
+        <a href="{% url 'credit_digitalization:application_edit' application.pk %}" class="btn btn-outline-primary">Ubah Data</a>
+    {% endif %}
+</div>
+
+{% if application.status == 'DRAFT' %}
+    {% if application.missing_requirements %}
+        <div class="alert alert-warning">
+            <div class="fw-semibold mb-2">Pengajuan belum dapat di-submit.</div>
+            <div class="small mb-2">Lengkapi {{ application.missing_requirements|length }} item berikut:</div>
+            <div class="d-flex flex-wrap gap-2">
+                {% for item in application.missing_requirements %}<span class="badge text-bg-light border text-dark">{{ item }}</span>{% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-success d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div><strong>Data dan dokumen lengkap.</strong><br><span class="small">Pengajuan dapat dikirim ke Atasan Marketing.</span></div>
+            {% if application.created_by == request.user %}
+                <form method="post" action="{% url 'credit_digitalization:application_submit' application.pk %}" onsubmit="return confirm('Submit pengajuan ini? Data tidak dapat diubah setelah dikirim.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Submit Pengajuan</button>
+                </form>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if application.status == 'REJECTED' %}
+    <div class="alert alert-danger">
+        <strong>Alasan penolakan:</strong> {{ application.rejection_reason }}
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-3">
+            <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">Data Pengajuan</h2></div>
+            <div class="card-body p-4">
+                <h3 class="section-label">Lead dan Konsumen</h3>
+                <div class="row g-3 detail-grid mb-4">
+                    <div class="col-md-6"><span>Dealer</span><strong>{{ application.dealer_name|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Sales Dealer</span><strong>{{ application.dealer_sales_name|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Nama Konsumen</span><strong>{{ application.consumer_name|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>NIK</span><strong>{{ application.nik|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Nomor Telepon</span><strong>{{ application.phone_number|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Tanggal Lahir</span><strong>{{ application.birth_date|date:'d F Y'|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Status Perkawinan</span><strong>{{ application.get_marital_status_display|default:'-' }}</strong></div>
+                    {% if application.spouse_name %}<div class="col-md-6"><span>Nama Pasangan</span><strong>{{ application.spouse_name }}</strong></div>{% endif %}
+                    <div class="col-12"><span>Consent Data Pribadi</span><strong class="{% if application.consent_personal_data %}text-success{% else %}text-danger{% endif %}">{% if application.consent_personal_data %}Disetujui pada {{ application.consent_at|date:'d M Y, H:i' }}{% else %}Belum disetujui{% endif %}</strong></div>
+                </div>
+
+                <h3 class="section-label">Kendaraan dan Pinjaman</h3>
+                <div class="row g-3 detail-grid">
+                    <div class="col-md-6"><span>Kendaraan</span><strong>{{ application.vehicle_brand|default:'-' }} {{ application.vehicle_model }}</strong></div>
+                    <div class="col-md-6"><span>Tipe / Warna</span><strong>{{ application.vehicle_type|default:'-' }} / {{ application.vehicle_color|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Harga Kendaraan</span><strong>Rp {{ application.vehicle_price|floatformat:0|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Asuransi</span><strong>{{ application.get_insurance_type_display|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Down Payment</span><strong>Rp {{ application.down_payment|floatformat:0|default:'-' }}</strong></div>
+                    <div class="col-md-6"><span>Tenor</span><strong>{{ application.tenor_months|default:'-' }} bulan</strong></div>
+                    <div class="col-md-6"><span>Angsuran / Bulan</span><strong>Rp {{ application.monthly_installment|floatformat:0|default:'-' }}</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">Dokumen Persyaratan</h2></div>
+            <div class="list-group list-group-flush">
+                <div class="list-group-item px-4 py-3 d-flex justify-content-between"><span>KTP</span>{% if application.ktp_document %}<a href="{% url 'credit_digitalization:document_download' application.pk 'ktp' %}">Unduh</a>{% else %}<span class="text-danger small">Belum diunggah</span>{% endif %}</div>
+                <div class="list-group-item px-4 py-3 d-flex justify-content-between"><span>Kartu Keluarga</span>{% if application.family_card_document %}<a href="{% url 'credit_digitalization:document_download' application.pk 'family-card' %}">Unduh</a>{% else %}<span class="text-danger small">Belum diunggah</span>{% endif %}</div>
+                <div class="list-group-item px-4 py-3 d-flex justify-content-between"><span>Bukti Bayar Tanda Jadi</span>{% if application.booking_fee_document %}<a href="{% url 'credit_digitalization:document_download' application.pk 'booking-fee' %}">Unduh</a>{% else %}<span class="text-danger small">Belum diunggah</span>{% endif %}</div>
+                <div class="list-group-item px-4 py-3 d-flex justify-content-between"><span>Form Aplikasi Pengajuan</span>{% if application.application_form_document %}<a href="{% url 'credit_digitalization:document_download' application.pk 'application-form' %}">Unduh</a>{% else %}<span class="text-danger small">Belum diunggah</span>{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        {% if is_supervisor and application.status == 'SUBMITTED' %}
+            <div class="card mb-3">
+                <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">Keputusan Approval</h2></div>
+                <div class="card-body p-4">
+                    {% if can_review %}
+                        <p class="small text-secondary">Pastikan data, consent, dan dokumen telah sesuai sebelum mengambil keputusan.</p>
+                        <form method="post" action="{% url 'credit_digitalization:application_review' application.pk %}">
+                            {% csrf_token %}
+                            {{ review_form.decision }}
+                            <div class="mb-3">
+                                <label for="{{ review_form.notes.id_for_label }}" class="form-label">{{ review_form.notes.label }}</label>
+                                {{ review_form.notes }}
+                                {% for error in review_form.notes.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success" onclick="this.form.decision.value='APPROVED'; return confirm('Setujui pengajuan ini?')">Setujui Pengajuan</button>
+                                <button type="submit" class="btn btn-outline-danger" onclick="this.form.decision.value='REJECTED'">Tolak Pengajuan</button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning mb-0 small">Maker tidak dapat me-review pengajuannya sendiri (maker–checker).</div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">Audit Trail</h2></div>
+            <div class="card-body p-4">
+                <div class="audit-list">
+                    {% for audit in application.audit_trails.all %}
+                        <div class="audit-item">
+                            <div class="fw-semibold">{{ audit.get_action_display }}</div>
+                            <div class="small text-secondary">{{ audit.actor.get_full_name|default:audit.actor.username }}, {{ audit.created_at|date:'d M Y, H:i' }}</div>
+                            {% if audit.from_status %}<div class="small mt-1"><code>{{ audit.from_status }}</code> menjadi <code>{{ audit.to_status }}</code></div>{% endif %}
+                            {% if audit.notes %}<div class="small mt-1">{{ audit.notes }}</div>{% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-secondary small mb-0">Belum ada aktivitas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

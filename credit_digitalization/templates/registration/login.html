@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Masuk | Pengajuan Kredit{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-7 col-lg-5">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <h1 class="h4 mb-2">Pengajuan Kredit Kendaraan</h1>
+                    <p class="text-secondary mb-0">Silakan masuk untuk melanjutkan</p>
+                </div>
+
+                {% if form.errors %}
+                    <div class="alert alert-danger py-2 small">
+                        Username atau password tidak sesuai.
+                    </div>
+                {% endif %}
+                {% if next and request.user.is_authenticated %}
+                    <div class="alert alert-warning py-2 small">Akun Anda tidak memiliki akses ke halaman tersebut.</div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Username</label>
+                        <input type="text" name="username" id="id_username" class="form-control" autofocus required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="id_password" class="form-label">Password</label>
+                        <input type="password" name="password" id="id_password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Masuk</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

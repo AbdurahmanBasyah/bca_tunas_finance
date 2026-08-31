@@ -1,0 +1,12 @@
+html, body { min-height: 100%; }
+body { display: flex; flex-direction: column; }
+main { flex: 1; }
+.table thead th { white-space: nowrap; }
+.form-label { font-weight: 500; }
+.consent-box { background: #f8f9fa; border: 1px solid #dee2e6; }
+.section-label { font-size: .9rem; font-weight: 600; padding-bottom: .5rem; border-bottom: 1px solid #dee2e6; }
+.detail-grid span { display: block; color: #718096; font-size: .78rem; margin-bottom: .2rem; }
+.detail-grid strong { display: block; }
+.audit-item { padding-bottom: 1rem; border-bottom: 1px solid #dee2e6; margin-bottom: 1rem; }
+.audit-item:last-child { padding-bottom: 0; }
+.audit-item:last-child { border-bottom: 0; margin-bottom: 0; }

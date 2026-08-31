@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Daftar Pengajuan{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-1">Daftar Pengajuan Kredit</h1>
+        <p class="text-secondary mb-0">Login sebagai {{ role_label }}</p>
+    </div>
+    {% if is_marketing %}
+        <a href="{% url 'credit_digitalization:application_create' %}" class="btn btn-primary">
+            Buat Pengajuan
+        </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nomor Pengajuan</th>
+                    <th>Konsumen</th>
+                    <th>Dealer / Kendaraan</th>
+                    {% if is_supervisor %}<th>Marketing</th>{% endif %}
+                    <th>Status</th>
+                    <th>Diperbarui</th>
+                    <th class="text-end">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                    <tr>
+                        <td class="fw-semibold">{{ application.application_number }}</td>
+                        <td>
+                            <div>{{ application.consumer_name|default:'Belum diisi' }}</div>
+                            <small class="text-secondary">{{ application.nik|default:'NIK belum diisi' }}</small>
+                        </td>
+                        <td>
+                            <div>{{ application.dealer_name|default:'Dealer belum diisi' }}</div>
+                            <small class="text-secondary">{{ application.vehicle_brand }} {{ application.vehicle_model }}</small>
+                        </td>
+                        {% if is_supervisor %}<td>{{ application.created_by.get_full_name|default:application.created_by.username }}</td>{% endif %}
+                        <td><span class="badge rounded-pill {{ application.status_badge_class }}">{{ application.get_status_display }}</span></td>
+                        <td>{{ application.updated_at|date:'d M Y, H:i' }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'credit_digitalization:application_detail' application.pk %}">Lihat</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-secondary">Belum ada pengajuan.</div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

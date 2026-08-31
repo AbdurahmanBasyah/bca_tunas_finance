@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | Pengajuan Kredit{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-start gap-3 mb-4">
+    <a href="{% if application %}{% url 'credit_digitalization:application_detail' application.pk %}{% else %}{% url 'credit_digitalization:dashboard' %}{% endif %}" class="btn btn-sm btn-outline-secondary">Kembali</a>
+    <div>
+        <h1 class="h4 mb-1">{{ page_title }}</h1>
+        <p class="text-secondary mb-0">Isi data pengajuan kredit di bawah ini.</p>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="card mb-3">
+        <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">1. Informasi Lead dan Dealer</h2></div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.dealer_name col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.dealer_sales_name col='col-md-6' %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">2. Data Konsumen dan Consent</h2></div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.consumer_name col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.nik col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.phone_number col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.birth_date col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.marital_status col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.spouse_name col='col-md-6' %}
+                <div class="col-12">
+                    <div class="form-check consent-box p-3 ps-5 rounded">
+                        {{ form.consent_personal_data }}
+                        <label class="form-check-label fw-semibold" for="{{ form.consent_personal_data.id_for_label }}">{{ form.consent_personal_data.label }}</label>
+                        <div class="form-text">{{ form.consent_personal_data.help_text }}</div>
+                        {% for error in form.consent_personal_data.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">3. Data Kendaraan</h2></div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.vehicle_brand col='col-md-6 col-lg-4' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.vehicle_model col='col-md-6 col-lg-4' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.vehicle_type col='col-md-6 col-lg-4' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.vehicle_color col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.vehicle_price col='col-md-6' prefix='Rp' %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white px-4 py-3"><h2 class="h5 mb-0">4. Data Pinjaman</h2></div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.insurance_type col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.down_payment col='col-md-6' prefix='Rp' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.tenor_months col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.monthly_installment col='col-md-6' prefix='Rp' %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-white px-4 py-3">
+            <h2 class="h5 mb-1">5. Dokumen Persyaratan</h2>
+            <p class="small text-secondary mb-0">Format PDF/JPG/PNG, maksimal 5 MB per file.</p>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.ktp_document col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.family_card_document col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.booking_fee_document col='col-md-6' %}
+                {% include 'credit_digitalization/partials/form_field.html' with field=form.application_form_document col='col-md-6' %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mb-4">
+        <a href="{% if application %}{% url 'credit_digitalization:application_detail' application.pk %}{% else %}{% url 'credit_digitalization:dashboard' %}{% endif %}" class="btn btn-outline-secondary">Batal</a>
+        <button type="submit" class="btn btn-primary px-4">{{ submit_label }}</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const maritalStatus = document.getElementById('id_marital_status');
+    const spouseInput = document.getElementById('id_spouse_name');
+    function updateSpouseState() {
+        if (!maritalStatus || !spouseInput) return;
+        spouseInput.closest('.col-md-6').classList.toggle('d-none', maritalStatus.value !== 'MARRIED');
+    }
+    maritalStatus?.addEventListener('change', updateSpouseState);
+    updateSpouseState();
+</script>
+{% endblock %}
